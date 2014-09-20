@@ -1,0 +1,11 @@
+---
+
+- name: check for chruby
+  shell: >
+    executable=/bin/bash source /etc/profile;
+    chruby --version | awk '{ print $2 }'
+  ignore_errors: yes
+  register: installed_chruby_version
+
+- include: install_chruby.yml
+  when: installed_chruby_version.stdout != chruby_version
