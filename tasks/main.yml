@@ -1,11 +1,40 @@
 ---
 
-- name: check for chruby
+- name: Download chruby
+  shell: wget -O chruby-{{ chruby_version }}.tar.gz https://github.com/postmodern/chruby/archive/v{{ chruby_version }}.tar.gz
+  when: ansible_local is not defined or ansible_local.chruby is not defined or ansible_local.chruby.version != chruby_version
+  register: ruby_install_downloaded
+
+- name: Extract chruby
+  shell: tar -xzvf chruby-{{ chruby_version }}.tar.gz
+  when: ruby_install_downloaded | changed
+  register: ruby_install_extracted
+
+- name: Install chruby
+  sudo: true
+  shell: cd chruby-{{ chruby_version }}/ && make install
+  when: ruby_install_extracted | changed
+  register: ruby_install_installed
+
+- name: Clean up chruby sources
+  shell: rm -rf chruby-*
+  when: ruby_install_downloaded | changed
+
+- name: Attach chruby into shell
+  sudo: true
+  template: src=chruby.sh dest=/etc/profile.d/chruby.sh
+
+- name: Capture installed chruby version
   shell: >
     executable=/bin/bash source /etc/profile;
     chruby --version | awk '{ print $2 }'
   ignore_errors: yes
   register: installed_chruby_version
 
-- include: install_chruby.yml
-  when: installed_chruby_version.stdout != chruby_version
+- name: Create ansible facts directory
+  sudo: true
+  file: state=directory recurse=yes path=/etc/ansible/facts.d
+
+- name: Set chruby facts
+  sudo: true
+  template: src=chruby.fact dest=/etc/ansible/facts.d/chruby.fact
