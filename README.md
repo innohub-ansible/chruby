@@ -10,7 +10,7 @@ Tested on Ubuntu 12.04 and 14.04 only.
 Role Variables
 --------------
 
-chruby_version : defaults to '0.3.8'
+chruby_version : defaults to '0.3.9'
 
 Example Playbook
 ----------------
