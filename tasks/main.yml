@@ -1,7 +1,14 @@
 ---
 
+- name: Create working directory
+  file:
+    path: /usr/src
+    state: directory
+
 - name: Download chruby
-  shell: wget -O chruby-{{ chruby_version }}.tar.gz https://github.com/postmodern/chruby/archive/v{{ chruby_version }}.tar.gz
+  get_url:
+    url: https://github.com/postmodern/chruby/archive/v{{ chruby_version }}.tar.gz
+    dest: /usr/src/chruby-{{ chruby_version }}.tar.gz
   when:
     ansible_local is not defined or
     ansible_local.chruby is not defined or
@@ -9,18 +16,18 @@
   register: chruby_downloaded
 
 - name: Extract chruby
-  shell: tar -xzvf chruby-{{ chruby_version }}.tar.gz
+  shell: tar -C /usr/src -xzvf /usr/src/chruby-{{ chruby_version }}.tar.gz
   when: chruby_downloaded | changed
   register: chruby_extracted
 
 - name: Install chruby
   sudo: true
-  shell: cd chruby-{{ chruby_version }}/ && make install
+  shell: cd /usr/src/chruby-{{ chruby_version }}/ && make install
   when: chruby_extracted | changed
   register: chruby_installed
 
 - name: Clean up chruby sources
-  shell: rm -rf chruby-*
+  shell: rm -rf /usr/src/chruby-*
   when: chruby_downloaded | changed
 
 - name: Attach chruby into shell
